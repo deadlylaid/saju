@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사주 한 장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@600;900&display=swap">
+<style>
+/* Layout: 좁은 한 줄 기둥. 입력 → 네 기둥(시·일·월·년, 오른쪽에서 왼쪽으로 읽는 전통 배치) → 오행 → 풀이 */
+:root {
+  --bg: #E8EDEA;
+  --surface: #F5F8F6;
+  --ink: #18211E;
+  --muted: #5B6862;
+  --line: #C9D3CE;
+  --seal: #B3302A;
+  --seal-ink: #FFF6F4;
+
+  --wood: #2F7A4F;   --wood-bg: #DCEBDF;
+  --fire: #C2392F;   --fire-bg: #F5DEDA;
+  --earth: #A67A1E;  --earth-bg: #F1E7CC;
+  --metal: #6F7A80;  --metal-bg: #EEF1F2;
+  --water: #1E3550;  --water-bg: #D6DEE8;
+
+  --f-display: "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", serif;
+  --f-hanja: "Noto Serif KR", "AppleMyungjo", serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111614; --surface: #19201D; --ink: #E3EAE6; --muted: #8C9A93; --line: #2C3632;
+    --seal: #E0564A; --seal-ink: #1A0E0C;
+    --wood: #6CC08C;  --wood-bg: #1C3326;
+    --fire: #F07A6E;  --fire-bg: #3A1D1A;
+    --earth: #DDB45A; --earth-bg: #362C14;
+    --metal: #B9C3C8; --metal-bg: #2A3034;
+    --water: #8FB3DB; --water-bg: #17243A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #19201D; --ink: #E3EAE6; --muted: #8C9A93; --line: #2C3632;
+  --seal: #E0564A; --seal-ink: #1A0E0C;
+  --wood: #6CC08C;  --wood-bg: #1C3326;
+  --fire: #F07A6E;  --fire-bg: #3A1D1A;
+  --earth: #DDB45A; --earth-bg: #362C14;
+  --metal: #B9C3C8; --metal-bg: #2A3034;
+  --water: #8FB3DB; --water-bg: #17243A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.7 var(--f-body);
+  padding-inline: 16px; padding-block: 32px 64px;
+}
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 28px; }
+
+header { display: flex; align-items: center; gap: 14px; }
+.seal {
+  width: 52px; height: 52px; flex: none;
+  background: var(--seal); color: var(--seal-ink);
+  display: grid; grid-template-columns: 1fr 1fr; place-items: center;
+  font: 900 17px/1 var(--f-hanja); border-radius: 4px; padding: 6px;
+  transform: rotate(-4deg);
+}
+h1 { font: 700 30px/1.2 var(--f-display); margin: 0; letter-spacing: -0.01em; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+
+form {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; display: grid; gap: 14px;
+}
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.field { display: grid; gap: 4px; flex: 1 1 150px; min-width: 0; }
+label.cap { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.06em; }
+input[type="date"], input[type="time"] {
+  font: 500 16px var(--f-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 100%;
+}
+input:disabled { opacity: 0.4; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); }
+.checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+button {
+  font: 600 15px var(--f-body); background: var(--ink); color: var(--bg);
+  border: 0; border-radius: 6px; padding: 11px 22px; cursor: pointer; flex: none;
+}
+button:hover { opacity: 0.88; }
+:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+.err { color: var(--seal); font-size: 13.5px; margin: 0; }
+
+.badge {
+  display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em;
+  color: var(--seal); border: 1px solid var(--seal); border-radius: 3px; padding: 0 6px;
+}
+.result-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+.result-head h2 { font: 700 21px/1.3 var(--f-display); margin: 0; }
+.meta { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pillar { display: grid; gap: 6px; text-align: center; min-width: 0; }
+.p-label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; }
+.god { font-size: 12px; color: var(--muted); min-height: 1.6em; }
+.god.me { color: var(--seal); font-weight: 600; }
+.ch {
+  border-radius: 8px; padding: 10px 4px 8px; display: grid; gap: 2px;
+  border: 1px solid transparent;
+}
+.ch .h { font: 900 clamp(30px, 9vw, 44px)/1.05 var(--f-hanja); }
+.ch .k { font-size: 12px; font-weight: 500; }
+.ch.day { border-color: var(--seal); box-shadow: inset 0 0 0 1px var(--seal); }
+.ch.empty { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.ch.empty .h { font-size: 26px; opacity: 0.5; }
+.el-wood  { background: var(--wood-bg);  color: var(--wood); }
+.el-fire  { background: var(--fire-bg);  color: var(--fire); }
+.el-earth { background: var(--earth-bg); color: var(--earth); }
+.el-metal { background: var(--metal-bg); color: var(--metal); border-color: var(--line); }
+.el-water { background: var(--water-bg); color: var(--water); }
+
+section.block { display: grid; gap: 10px; }
+section.block h3 {
+  font: 700 17px/1.3 var(--f-display); margin: 0;
+  display: flex; gap: 8px; align-items: baseline;
+}
+section.block h3 small { font: 500 12px var(--f-body); color: var(--muted); }
+.block p { margin: 0; max-width: 62ch; }
+
+.bars { display: grid; gap: 7px; }
+.bar { display: grid; grid-template-columns: 56px 1fr 28px; gap: 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.bar .n { font-weight: 600; font-size: 13.5px; }
+.bar .n b { font-family: var(--f-hanja); font-weight: 900; margin-right: 4px; }
+.track { height: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+.bar .c { text-align: right; font-size: 13px; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; }
+.kw { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw span { font-size: 12.5px; background: var(--bg); border: 1px solid var(--line); border-radius: 99px; padding: 1px 10px; }
+
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+footer p { margin: 0 0 4px; }
+
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="seal" aria-hidden="true"><span>四</span><span>柱</span><span>八</span><span>字</span></div>
+    <div>
+      <h1>사주 한 장</h1>
+      <p class="sub">양력 생년월일과 태어난 시간으로 보는 사주팔자</p>
+    </div>
+  </header>
+
+  <form id="f" novalidate>
+    <div class="row">
+      <div class="field">
+        <label class="cap" for="bdate">생년월일 (양력)</label>
+        <input type="date" id="bdate" min="1900-01-01" max="2100-12-31" value="1990-05-15" required>
+      </div>
+      <div class="field">
+        <label class="cap" for="btime">태어난 시간</label>
+        <input type="time" id="btime" value="14:30">
+      </div>
+      <button type="submit" id="go">사주 보기</button>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="unknown"> 시간을 몰라요</label>
+      <label><input type="checkbox" id="lmt" checked> 서울 진태양시 보정</label>
+    </div>
+    <p class="err" id="err" hidden></p>
+  </form>
+
+  <main id="out" class="wrap" style="gap:28px"></main>
+
+  <footer>
+    <p>절기는 태양 황경을 계산해 나눕니다(입춘 기준 연·월). 진태양시 보정은 서울 경도(127°E)에 맞춰 약 32분을 빼고, 1954–61년 표준시와 1987–88년 서머타임도 반영합니다.</p>
+    <p>재미로 보는 풀이입니다. 중요한 결정은 사주보다 본인의 판단을 믿으세요.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const STEM_H = "甲乙丙丁戊己庚辛壬癸", STEM_K = "갑을병정무기경신임계";
+  const BR_H = "子丑寅卯辰巳午未申酉戌亥", BR_K = "자축인묘진사오미신유술해";
+  const ANIMAL = ["쥐","소","호랑이","토끼","용","뱀","말","양","원숭이","닭","개","돼지"];
+  const EL = ["wood","fire","earth","metal","water"];
+  const EL_H = "木火土金水", EL_K = ["목","화","토","금","수"];
+  const BR_EL = [4,2,0,0,2,1,1,2,3,3,2,4];
+  const BR_MAIN = [9,5,0,1,4,2,3,5,6,7,4,8]; // 지장간 본기
+  const GODS = [["비견","겁재"],["식신","상관"],["편재","정재"],["편관","정관"],["편인","정인"]];
+
+  const stemEl = s => Math.floor(s / 2);
+  const tenGod = (day, s) => {
+    const d = (stemEl(s) - stemEl(day) + 5) % 5;
+    return GODS[d][(day % 2) === (s % 2) ? 0 : 1];
+  };
+  const mod = (a, n) => ((a % n) + n) % n;
+
+  // 한국 표준시 오프셋(시간). 1954-03-21~1961-08-09는 UTC+8:30, 1987·88 서머타임 +1
+  function koreaOffset(y, m, d) {
+    const k = y * 10000 + m * 100 + d;
+    if (k >= 19540321 && k < 19610810) return 8.5;
+    if ((k >= 19870510 && k < 19871011) || (k >= 19880508 && k < 19881009)) return 10;
+    return 9;
+  }
+
+  // 태양 겉보기 황경 (Meeus 저정밀식, 오차 ~0.01°)
+  function sunLon(jd) {
+    const T = (jd - 2451545) / 36525, r = Math.PI / 180;
+    const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+    const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * r;
+    const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M)
+            + (0.019993 - 0.000101 * T) * Math.sin(2 * M) + 0.000289 * Math.sin(3 * M);
+    const om = (125.04 - 1934.136 * T) * r;
+    return mod(L0 + C - 0.00569 - 0.00478 * Math.sin(om), 360);
+  }
+
+  function calc(y, m, d, hh, mm, hasTime, useLmt) {
+    const off = koreaOffset(y, m, d);
+    const utcMs = Date.UTC(y, m - 1, d, hasTime ? hh : 12, hasTime ? mm : 0) - off * 3600000;
+    const lon = sunLon(utcMs / 86400000 + 2440587.5);
+
+    // 년주: 입춘(황경 315°) 전이면 전년도
+    let sy = y;
+    if (m <= 2 && lon >= 270 && lon < 315) sy -= 1;
+    const yi = mod(sy - 4, 60), ys = yi % 10, yb = yi % 12;
+
+    // 월주: 입춘부터 30°마다 한 달 (0 = 寅월)
+    const mi = Math.floor(mod(lon - 315, 360) / 30);
+    const mb = (mi + 2) % 12, ms = ((ys % 5) * 2 + 2 + mi) % 10;
+
+    // 일주·시주: 보정된 현지 시각 기준, 23시(子시)부터 다음 날
+    const local = new Date(useLmt ? utcMs + (127 / 15) * 3600000 : utcMs + off * 3600000);
+    let dayMs = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate());
+    const mins = local.getUTCHours() * 60 + local.getUTCMinutes();
+    if (hasTime && mins >= 23 * 60) dayMs += 86400000;
+    const jdn = dayMs / 86400000 + 2440588;
+    const di = mod(jdn + 49, 60), ds = di % 10, db = di % 12;
+
+    let hour = null;
+    if (hasTime) {
+      const hb = Math.floor((mins + 60) / 120) % 12;
+      hour = { s: ((ds % 5) * 2 + hb) % 10, b: hb };
+    }
+    return {
+      year: { s: ys, b: yb }, month: { s: ms, b: mb }, day: { s: ds, b: db }, hour,
+      localStr: hasTime ? `${String(local.getUTCHours()).padStart(2,"0")}:${String(local.getUTCMinutes()).padStart(2,"0")}` : null
+    };
+  }
+
+  const DM = [
+    { t: "큰 나무", k: ["곧음","진취","리더십"], p: "하늘로 곧게 뻗는 큰 나무처럼 목표가 분명하고 앞으로 나아가려는 힘이 강합니다. 남에게 굽히기 싫어하고 스스로 길을 내는 편이라, 맡은 일에서 자연스럽게 리더 자리에 섭니다. 다만 한번 정한 방향을 잘 바꾸지 않아 융통성이 부족하다는 말을 들을 수 있습니다." },
+    { t: "풀과 덩굴", k: ["유연","적응력","끈기"], p: "바람에 휘어도 꺾이지 않는 풀처럼 부드럽고 적응력이 뛰어납니다. 사람 사이를 잘 엮고 상황에 맞춰 길을 찾아내는 생활력이 있습니다. 겉은 순해 보여도 속은 질기고 끈질겨서, 오래 버티는 싸움에 강합니다." },
+    { t: "한낮의 태양", k: ["열정","솔직","존재감"], p: "모든 것을 환하게 비추는 태양처럼 밝고 열정적입니다. 감정을 숨기지 않고 솔직하게 드러내며, 어디서든 눈에 띄는 존재감이 있습니다. 베푸는 걸 좋아하지만 쉽게 달아오르고 쉽게 식는 면은 다스릴 필요가 있습니다." },
+    { t: "촛불과 등불", k: ["섬세","따뜻함","집중력"], p: "어둠 속에서 한 곳을 비추는 촛불처럼 섬세하고 따뜻합니다. 겉으로는 조용해도 안에 뜨거운 열정을 품고 있고, 한 가지에 깊이 몰입하는 집중력이 뛰어납니다. 예민한 감수성이 장점이자 스트레스의 원인이 되기도 합니다." },
+    { t: "큰 산", k: ["듬직함","신뢰","포용"], p: "움직이지 않는 큰 산처럼 듬직하고 믿음직합니다. 쉽게 흔들리지 않고 여러 사람을 품어 주는 포용력이 있어 주변에서 기대는 사람이 많습니다. 대신 속마음을 잘 드러내지 않고 고집이 세다는 평을 듣기도 합니다." },
+    { t: "기름진 논밭", k: ["실속","세심함","배려"], p: "씨앗을 받아 길러 내는 논밭처럼 실속 있고 세심합니다. 현실 감각이 좋아 계획을 차근차근 현실로 만들고, 사람을 챙기는 배려심이 깊습니다. 생각이 많아 결정을 미루거나 속으로 걱정을 쌓아 두는 편입니다." },
+    { t: "바위와 무쇠", k: ["결단력","의리","원칙"], p: "다듬어지지 않은 무쇠처럼 강직하고 결단력이 있습니다. 옳고 그름이 분명하고 의리를 중요하게 여겨, 한번 내 사람이라 생각하면 끝까지 지킵니다. 말이 직설적이라 의도와 달리 상대에게 상처를 줄 수 있습니다." },
+    { t: "빛나는 보석", k: ["예리함","깔끔함","감각"], p: "잘 세공된 보석처럼 깔끔하고 예리합니다. 미적 감각과 완성도에 대한 기준이 높고, 디테일을 놓치지 않습니다. 자존심이 강해 인정받을 때 가장 빛나며, 비판에는 생각보다 크게 상처받는 편입니다." },
+    { t: "넓은 바다", k: ["포부","지혜","자유"], p: "모든 물을 받아들이는 바다처럼 생각의 폭이 넓고 포부가 큽니다. 머리 회전이 빠르고 지혜로우며, 틀에 갇히는 걸 싫어해 자유롭게 움직일 때 능력이 살아납니다. 관심사가 넓은 만큼 한곳에 오래 머무르기 어려울 수 있습니다." },
+    { t: "비와 이슬", k: ["총명","직관","조용한 힘"], p: "땅을 적시는 비와 이슬처럼 조용하지만 스며드는 힘이 있습니다. 총명하고 직관이 뛰어나 남이 못 보는 것을 먼저 알아챕니다. 앞에 나서기보다 뒤에서 영향력을 발휘하는 타입이며, 감정을 혼자 삭이는 경향이 있습니다." }
+  ];
+
+  const YEAR_GOD = {
+    "비견": "나와 같은 기운이 들어오는 해입니다. 자립심과 추진력이 커지고 동료·친구와 함께할 일이 늘어납니다. 경쟁이 생기기 쉬우니 돈 거래와 동업은 신중하게 하세요.",
+    "겁재": "나와 비슷하지만 결이 다른 기운이 들어옵니다. 승부욕이 강해지고 과감한 도전을 하게 되는 해입니다. 지출과 손재수에 주의하고, 충동적인 투자는 피하는 게 좋습니다.",
+    "식신": "내가 만들어 내는 기운이 흐르는 해입니다. 재능을 표현하고 결과물을 내기 좋습니다. 먹고 즐기는 일이 늘고 마음이 여유로워지는 편안한 흐름입니다.",
+    "상관": "표현력과 끼가 폭발하는 해입니다. 새로운 아이디어와 변화를 시도하기 좋지만, 말이 앞서 윗사람과 부딪히기 쉽습니다. 규칙 안에서 재능을 펼치는 게 요령입니다.",
+    "편재": "큰 재물과 기회가 움직이는 해입니다. 사업 확장, 투자, 새로운 인맥에서 기회가 옵니다. 들어오는 만큼 나가기도 쉬우니 크게 벌수록 잘 지키는 계획이 필요합니다.",
+    "정재": "꾸준하고 안정적인 재물운이 드는 해입니다. 성실하게 쌓은 만큼 정직한 보상이 돌아옵니다. 저축과 살림을 다지기 좋고, 연애와 결혼 운도 함께 움직입니다.",
+    "편관": "압박과 시험이 함께 오는 해입니다. 책임이 무거워지고 갑작스러운 변화가 있을 수 있지만, 버텨 내면 한 단계 올라섭니다. 건강과 무리한 일정 관리에 신경 쓰세요.",
+    "정관": "명예와 인정이 따르는 해입니다. 승진, 합격, 계약처럼 공식적인 성과가 기대됩니다. 원칙을 지키고 신뢰를 쌓을수록 운이 커지는 흐름입니다.",
+    "편인": "직관과 영감이 강해지는 해입니다. 공부, 자격증, 연구, 예술처럼 한 분야를 깊이 파기 좋습니다. 생각이 많아져 결단이 늦어질 수 있으니 실행 시점을 정해 두세요.",
+    "정인": "도움과 지원이 들어오는 해입니다. 윗사람이나 귀인의 덕을 보고, 배우고 익히는 일에 성과가 납니다. 문서·계약 운이 좋아 집이나 자격을 얻기에도 좋은 흐름입니다."
+  };
+
+  const LACK = [
+    "목(木)이 없어 새로 시작하고 키워 나가는 힘이 약할 수 있습니다. 초록색, 식물, 아침 산책, 동쪽 방향이 도움이 됩니다.",
+    "화(火)가 없어 표현과 열정을 드러내는 데 시간이 걸릴 수 있습니다. 붉은색, 햇볕, 운동으로 몸을 데우는 습관이 도움이 됩니다.",
+    "토(土)가 없어 중심을 잡고 꾸준히 버티는 힘이 약할 수 있습니다. 노란색·베이지, 규칙적인 생활, 흙을 만지는 취미가 도움이 됩니다.",
+    "금(金)이 없어 맺고 끊는 결단이 어려울 수 있습니다. 흰색, 정리정돈, 마감을 정해 두는 습관, 서쪽 방향이 도움이 됩니다.",
+    "수(水)가 없어 쉬어 가며 생각을 정리할 여유가 부족할 수 있습니다. 검정·남색, 충분한 수면, 물가 산책, 독서가 도움이 됩니다."
+  ];
+  const MUCH = [
+    "목(木)이 강해 성장 욕구와 추진력이 넘칩니다. 벌여 놓은 일을 마무리하는 연습이 균형을 잡아 줍니다.",
+    "화(火)가 강해 열정과 표현력이 뛰어납니다. 쉽게 달아오르니 감정을 식힐 쉼표를 만들어 두세요.",
+    "토(土)가 강해 안정감과 신뢰가 큽니다. 변화를 미루는 경향이 있으니 가끔은 익숙함을 벗어나 보세요.",
+    "금(金)이 강해 판단이 빠르고 원칙이 분명합니다. 말과 태도를 한 번 더 부드럽게 다듬으면 좋습니다.",
+    "수(水)가 강해 생각이 깊고 지혜롭습니다. 고민이 길어지기 쉬우니 작게라도 먼저 실행해 보세요."
+  ];
+
+  const $ = id => document.getElementById(id);
+  const chHTML = (idx, isStem, extra = "") => {
+    const el = isStem ? stemEl(idx) : BR_EL[idx];
+    const h = isStem ? STEM_H[idx] : BR_H[idx];
+    const k = isStem ? STEM_K[idx] : BR_K[idx];
+    return `<div class="ch el-${EL[el]} ${extra}"><span class="h">${h}</span><span class="k">${k} · ${EL_K[el]}</span></div>`;
+  };
+
+  function render(r, input) {
+    const ds = r.day.s;
+    const cols = [["시주", r.hour], ["일주", r.day], ["월주", r.month], ["년주", r.year]];
+    const pillars = cols.map(([label, p]) => {
+      if (!p) return `<div class="pillar"><div class="p-label">${label}</div><div class="god">&nbsp;</div>
+        <div class="ch empty"><span class="h">?</span><span class="k">모름</span></div>
+        <div class="ch empty"><span class="h">?</span><span class="k">모름</span></div><div class="god">&nbsp;</div></div>`;
+      const isDay = label === "일주";
+      return `<div class="pillar"><div class="p-label">${label}</div>
+        <div class="god ${isDay ? "me" : ""}">${isDay ? "나 (일간)" : tenGod(ds, p.s)}</div>
+        ${chHTML(p.s, true, isDay ? "day" : "")}
+        ${chHTML(p.b, false)}
+        <div class="god">${tenGod(ds, BR_MAIN[p.b])}</div></div>`;
+    }).join("");
+
+    const count = [0,0,0,0,0];
+    cols.forEach(([, p]) => { if (p) { count[stemEl(p.s)]++; count[BR_EL[p.b]]++; } });
+    const total = count.reduce((a, b) => a + b, 0);
+    const bars = count.map((c, i) => `<div class="bar"><span class="n" style="color:var(--${EL[i]})"><b>${EL_H[i]}</b>${EL_K[i]}</span>
+      <div class="track"><div class="fill" style="width:${(c / total) * 100}%;background:var(--${EL[i]})"></div></div><span class="c">${c}</span></div>`).join("");
+
+    const max = Math.max(...count);
+    const notes = [];
+    count.forEach((c, i) => { if (c === 0) notes.push(LACK[i]); });
+    count.forEach((c, i) => { if (c === max && c >= 3) notes.push(MUCH[i]); });
+    if (!notes.length) notes.push("다섯 가지 기운이 고르게 퍼져 있습니다. 어느 한쪽에 치우치지 않아 상황에 따라 다양한 모습을 꺼내 쓸 수 있는 구성입니다.");
+
+    const dm = DM[ds];
+    const nowY = new Date().getFullYear(), nyi = mod(nowY - 4, 60), nys = nyi % 10, nyb = nyi % 12;
+    const yg = tenGod(ds, nys);
+
+    $("out").innerHTML = `
+      <div class="result-head">
+        ${input.sample ? '<span class="badge">예시</span>' : ""}
+        <h2>${STEM_K[r.day.s]}${BR_K[r.day.b]}일주 · ${ANIMAL[r.year.b]}띠</h2>
+        <span class="meta">${input.y}.${String(input.m).padStart(2,"0")}.${String(input.d).padStart(2,"0")}
+          ${input.hasTime ? `${input.time}${input.useLmt ? ` (보정 ${r.localStr})` : ""}` : "· 시간 모름"}</span>
+      </div>
+      <div class="pillars">${pillars}</div>
+
+      <section class="block">
+        <h3>오행 분포 <small>${total}글자 중</small></h3>
+        <div class="bars">${bars}</div>
+        ${notes.map(n => `<p>${n}</p>`).join("")}
+      </section>
+
+      <section class="block">
+        <h3>나를 나타내는 글자 <small>일간 ${STEM_H[ds]} ${STEM_K[ds]}${EL_K[stemEl(ds)]}</small></h3>
+        <div class="card">
+          <strong style="font-family:var(--f-display);font-size:17px">${dm.t} 같은 사람</strong>
+          <div class="kw">${dm.k.map(k => `<span>${k}</span>`).join("")}</div>
+          <p>${dm.p}</p>
+        </div>
+      </section>
+
+      <section class="block">
+        <h3>${nowY}년 ${STEM_H[nys]}${BR_H[nyb]}년 흐름 <small>올해 천간이 나에게 ${yg}</small></h3>
+        <p>${YEAR_GOD[yg]}</p>
+      </section>`;
+  }
+
+  function run(sample) {
+    const err = $("err"); err.hidden = true;
+    const dv = $("bdate").value, tv = $("btime").value, hasTime = !$("unknown").checked;
+    if (!dv) { err.textContent = "생년월일을 입력해 주세요."; err.hidden = false; return; }
+    const [y, m, d] = dv.split("-").map(Number);
+    if (y < 1900 || y > 2100) { err.textContent = "1900년부터 2100년 사이 날짜만 계산할 수 있어요."; err.hidden = false; return; }
+    if (hasTime && !tv) { err.textContent = "태어난 시간을 입력하거나 '시간을 몰라요'를 선택해 주세요."; err.hidden = false; return; }
+    const [hh, mm] = hasTime ? tv.split(":").map(Number) : [0, 0];
+    const useLmt = $("lmt").checked;
+    render(calc(y, m, d, hh, mm, hasTime, useLmt), { y, m, d, time: tv, hasTime, useLmt, sample });
+  }
+
+  $("unknown").addEventListener("change", e => { $("btime").disabled = e.target.checked; });
+  $("f").addEventListener("submit", e => { e.preventDefault(); run(false); });
+  run(true);
+  window.__saju = { calc };
+})();
+</script>
+</body>
+</html>
